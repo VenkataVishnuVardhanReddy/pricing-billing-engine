@@ -1,18 +1,31 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/sinch_db?useSSL=false&serverTimezone=UTC
-    username: root
-    password: password
+    # Uses H2 in-memory by default so it runs instantly for testing. MySQL config commented below.
+    url: jdbc:h2:mem:sinch_db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    # MySQL config (Use this when running via Docker Compose)
+    # url: jdbc:mysql://localhost:3306/sinch_db?useSSL=false&serverTimezone=UTC
+    # username: root
+    # password: password
   jpa:
     hibernate:
-      ddl-auto: validate # We use Liquibase for schema evolution, not Hibernate!
+      ddl-auto: validate # Strictly Liquibase for schema evolution
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   kafka:
     consumer:
       bootstrap-servers: localhost:9092
       group-id: billing-group
-      enable-auto-commit: false # Manual offset management
+      enable-auto-commit: false # Critical: Manual offset management
     listener:
       ack-mode: manual
+
+grpc:
+  server:
+    port: 9090 # gRPC runs on 9090, REST runs on default 8080

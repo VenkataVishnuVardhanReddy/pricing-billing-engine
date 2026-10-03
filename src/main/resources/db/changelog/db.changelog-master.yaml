@@ -58,3 +58,37 @@ databaseChangeLog:
                   constraints:
                     foreignKeyName: fk_pricing_rule_plan
                     references: pricing_plans(id)
+  - changeSet:
+      id: 4
+      author: vishnu
+      changes:
+        - insert:
+            tableName: customer_balances
+            columns:
+              - column:
+                  name: account_id
+                  valueNumeric: 12345
+              - column:
+                  name: balance
+                  valueNumeric: 100.0000
+              - column:
+                  name: version
+                  valueNumeric: 1
+        - insert:
+            tableName: pricing_plans
+            columns:
+              - column:
+                  name: country_code
+                  value: "SE"
+        - insert:
+            tableName: pricing_rules
+            columns:
+              - column:
+                  name: operator
+                  value: "Telia"
+              - column:
+                  name: price
+                  valueNumeric: 0.0450
+              - column:
+                  name: plan_id
+                  valueNumeric: 1

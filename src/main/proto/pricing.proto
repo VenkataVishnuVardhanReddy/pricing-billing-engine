@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package com.vishnu.sinchdemo.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.vishnu.sinchdemo.grpc";
+option java_outer_classname = "PricingProto";
+
+service PricingService {
+    rpc GetPricingPlan (PricingRequest) returns (PricingResponse);
+}
+
+message PricingRequest {
+    string country_code = 1;
+}
+
+message PricingResponse {
+    int64 plan_id = 1;
+    string country_code = 2;
+    repeated PricingRuleDto rules = 3;
+}
+
+message PricingRuleDto {
+    int64 id = 1;
+    string operator = 2;
+    string price = 3;
+}

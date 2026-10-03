@@ -1,20 +1,51 @@
 package com.vishnu.sinchdemo.service;
 
-import org.springframework.stereotype.Service;
-import com.vishnu.sinchdemo.repository.PricingPlanRepository;
+import com.vishnu.sinchdemo.grpc.PricingRequest;
+import com.vishnu.sinchdemo.grpc.PricingResponse;
+import com.vishnu.sinchdemo.grpc.PricingRuleDto;
+import com.vishnu.sinchdemo.grpc.PricingServiceGrpc;
+import com.vishnu.sinchdemo.domain.PricingPlan;
+import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Service
-public class PricingGrpcService {
+@GrpcService
+public class PricingGrpcService extends PricingServiceGrpc.PricingServiceImplBase {
     
-    private final PricingPlanRepository repository;
+    private final PricingService pricingService;
 
-    public PricingGrpcService(PricingPlanRepository repository) {
-        this.repository = repository;
+    public PricingGrpcService(PricingService pricingService) {
+        this.pricingService = pricingService;
     }
 
-    // Placeholder for gRPC proto implementation. 
-    // Uses repository.findByCountryCode() leveraging @EntityGraph to ensure high performance on hot paths.
-    public void getPricingStream() {
-        // Implementation for high-performance gRPC bidirectional streaming
+    // High performance gRPC implementation for internal microservice communication
+    @Override
+    public void getPricingPlan(PricingRequest request, StreamObserver<PricingResponse> responseObserver) {
+        List<PricingPlan> plans = pricingService.getPricingPlans(request.getCountryCode());
+        
+        if (plans.isEmpty()) {
+            responseObserver.onCompleted();
+            return;
+        }
+
+        PricingPlan plan = plans.get(0);
+        
+        List<PricingRuleDto> ruleDtos = plan.getRules().stream()
+            .map(rule -> PricingRuleDto.newBuilder()
+                .setId(rule.getId())
+                .setOperator(rule.getOperator())
+                .setPrice(rule.getPrice().toString())
+                .build())
+            .collect(Collectors.toList());
+
+        PricingResponse response = PricingResponse.newBuilder()
+            .setPlanId(plan.getId())
+            .setCountryCode(plan.getCountryCode())
+            .addAllRules(ruleDtos)
+            .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     }
 }
